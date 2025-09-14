@@ -172,7 +172,7 @@ def main():
                         elif agent_name == "Chat Agent":
                             st.session_state.chat_agent = agent_class()
                         elif agent_name == "ML Scientist Agent":
-                            st.session_state.ml_scientist_agent = agent_class()
+                            st.session_state.ml_scientist_agent = agent_class(os.getenv("GOOGLE_API_KEY", ""))
                     
                     st.session_state.agents_initialized = True
                     status_text.text("All agents initialized successfully!")

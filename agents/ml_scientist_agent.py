@@ -10,11 +10,12 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import warnings
+import os
 warnings.filterwarnings('ignore')
 
 class MLScientistAgent:
-    def __init__(self, google_api_key: str):
-        self.google_api_key = google_api_key
+    def __init__(self, google_api_key: str = ""):
+        self.google_api_key = google_api_key or os.getenv("GOOGLE_API_KEY", "")
         self.models = {
             'regression': ['Linear Regression', 'Random Forest', 'XGBoost', 'Neural Network', 'Transformer'],
             'classification': ['Logistic Regression', 'Random Forest', 'XGBoost', 'Neural Network', 'Transformer'],
