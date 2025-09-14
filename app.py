@@ -17,6 +17,7 @@ from agents.eda_agent import EDAAgent
 from agents.descriptive_agent import DescriptiveAgent
 from agents.prescriptive_agent import PrescriptiveAgent
 from agents.chat_agent import ChatAgent
+from agents.ml_scientist_agent import MLScientistAgent
 
 # Load environment variables
 load_dotenv()
@@ -110,7 +111,8 @@ def main():
         st.session_state.persistent_outputs = {
             'dashboard': [],
             'prescriptive': [],
-            'chat': []
+            'chat': [],
+            'ml_scientist': []
         }    
 
     # Sidebar for file upload
@@ -151,7 +153,8 @@ def main():
                         ("EDA Agent", EDAAgent),
                         ("Descriptive Agent", DescriptiveAgent),
                         ("Prescriptive Agent", PrescriptiveAgent),
-                        ("Chat Agent", ChatAgent)
+                        ("Chat Agent", ChatAgent),
+                        ("ML Scientist Agent", MLScientistAgent)
                     ]
                     
                     for i, (agent_name, agent_class) in enumerate(agents):
@@ -168,6 +171,8 @@ def main():
                             st.session_state.prescriptive_agent = agent_class()
                         elif agent_name == "Chat Agent":
                             st.session_state.chat_agent = agent_class()
+                        elif agent_name == "ML Scientist Agent":
+                            st.session_state.ml_scientist_agent = agent_class()
                     
                     st.session_state.agents_initialized = True
                     status_text.text("All agents initialized successfully!")
@@ -273,8 +278,8 @@ def main():
         # Navigation menu
         selected = option_menu(
             menu_title=None,
-            options=["📊 BI Dashboard", "🔍 EDA", "📈 Descriptive", "🎯 Prescriptive", "💬 Chat with Data"],
-            icons=["graph-up", "search", "bar-chart", "target", "chat-dots"],
+            options=["📊 BI Dashboard", "🔍 EDA", "📈 Descriptive", "🎯 Prescriptive", "💬 Chat with Data", "🤖 ML Scientist"],
+            icons=["graph-up", "search", "bar-chart", "target", "chat-dots", "cpu"],
             menu_icon="cast",
             default_index=0,
             orientation="horizontal",
@@ -297,6 +302,8 @@ def main():
             show_prescriptive_page()
         elif selected == "💬 Chat with Data":
             show_chat_page()
+        elif selected == "🤖 ML Scientist":
+            show_ml_scientist_page()
     
     else:
         # Welcome page
@@ -311,6 +318,7 @@ def main():
         - **📈 Descriptive Agent**: Provides detailed statistical analysis
         - **🎯 Prescriptive Agent**: Offers actionable business recommendations
         - **💬 Chat Agent**: Interactive Q&A and custom visualization creation
+        - **🤖 ML Scientist**: Advanced machine learning and deep learning with PyTorch
 
         
         ### 🎯 Features:
@@ -1774,6 +1782,251 @@ def show_chat_page():
                 else:
                     st.info("No plot images found in response")
                     st.markdown(chat['response'])
+
+def show_ml_scientist_page():
+    """ML Scientist page for advanced machine learning and deep learning"""
+    st.header("🤖 ML Scientist - Advanced Machine Learning & Deep Learning")
+    
+    if 'data' not in st.session_state or st.session_state.data is None:
+        st.warning("⚠️ Please upload data first to start ML analysis!")
+        return
+    
+    # Data overview section
+    with st.expander("📊 Data Overview", expanded=False):
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("📋 Rows", f"{len(st.session_state.data):,}")
+        with col2:
+            st.metric("📊 Columns", len(st.session_state.data.columns))
+        with col3:
+            numeric_cols = len(st.session_state.data.select_dtypes(include=['number']).columns)
+            st.metric("🔢 Numeric", numeric_cols)
+        with col4:
+            categorical_cols = len(st.session_state.data.select_dtypes(include=['object']).columns)
+            st.metric("📝 Categorical", categorical_cols)
+        
+        st.subheader("Sample Data")
+        st.dataframe(st.session_state.data.head(), use_container_width=True)
+    
+    # ML Analysis Section
+    st.subheader("🧠 AI Data Analysis & Model Recommendations")
+    
+    # Analyze data and get recommendations
+    if st.button("🔍 Analyze Data & Recommend Models", type="primary"):
+        with st.spinner("🤖 Analyzing data characteristics..."):
+            analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
+            
+            # Store analysis results persistently
+            if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
+                st.session_state.persistent_outputs['ml_scientist'].append(analysis)
+        
+        # Display analysis results
+        st.success("✅ Data analysis complete!")
+        
+        # Data characteristics
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**📊 Dataset Characteristics:**")
+            st.write(f"• **Shape:** {analysis['data_shape']}")
+            st.write(f"• **Task Type:** {analysis['task_type'].title()}")
+            st.write(f"• **Numeric Columns:** {len(analysis['numeric_columns'])}")
+            st.write(f"• **Categorical Columns:** {len(analysis['categorical_columns'])}")
+        
+        with col2:
+            st.markdown("**🎯 Target Candidates:**")
+            for target in analysis['target_candidates'][:5]:  # Show first 5
+                st.write(f"• {target}")
+        
+        # Recommended models
+        st.markdown("**🤖 Recommended Models:**")
+        model_cols = st.columns(3)
+        for i, model in enumerate(analysis['recommended_models']):
+            with model_cols[i % 3]:
+                st.write(f"• {model}")
+    
+    # Model Selection and Code Generation
+    st.subheader("⚙️ Model Selection & Code Generation")
+    
+    col1, col2, col3 = st.columns([2, 2, 1])
+    
+    with col1:
+        target_column = st.selectbox(
+            "🎯 Select Target Column:",
+            options=st.session_state.data.columns.tolist(),
+            help="Choose the column you want to predict or analyze"
+        )
+    
+    with col2:
+        model_type = st.selectbox(
+            "🤖 Select Model Type:",
+            options=[
+                "Linear Regression", "Random Forest", "XGBoost", 
+                "Neural Network", "Transformer", "Logistic Regression"
+            ],
+            help="Choose the machine learning model to use"
+        )
+    
+    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        generate_code = st.button("🚀 Generate ML Code", type="primary")
+    
+    # Generate and execute ML code
+    if generate_code and target_column and model_type:
+        with st.spinner("🤖 Generating ML code and executing..."):
+            # Determine task type
+            if target_column in st.session_state.data.select_dtypes(include=['number']).columns:
+                task_type = 'regression'
+            else:
+                task_type = 'classification'
+            
+            # Generate ML code
+            ml_code = st.session_state.ml_scientist_agent.generate_ml_code(
+                st.session_state.data, target_column, model_type, task_type
+            )
+            
+            # Execute the code
+            execution_result = st.session_state.ml_scientist_agent.execute_ml_code(
+                ml_code, st.session_state.data
+            )
+            
+            # Store results persistently
+            ml_result = {
+                'target_column': target_column,
+                'model_type': model_type,
+                'task_type': task_type,
+                'code': ml_code,
+                'execution_result': execution_result,
+                'timestamp': pd.Timestamp.now()
+            }
+            
+            if ml_result not in st.session_state.persistent_outputs['ml_scientist']:
+                st.session_state.persistent_outputs['ml_scientist'].append(ml_result)
+        
+        # Display results
+        if execution_result['success']:
+            st.success(f"✅ {execution_result['message']}")
+            
+            # Display generated visualizations
+            if execution_result['images']:
+                st.subheader("📊 Generated Visualizations")
+                for i, img_base64 in enumerate(execution_result['images']):
+                    try:
+                        img_data = base64.b64decode(img_base64)
+                        img = Image.open(io.BytesIO(img_data))
+                        
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                   padding: 1rem; border-radius: 15px; margin: 1rem 0; text-align: center;">
+                            <h3 style="color: white; margin: 0; font-weight: 600;">📊 {model_type} Model Results</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.image(img, use_column_width=True)
+                        
+                    except Exception as e:
+                        st.error(f"Error displaying visualization {i+1}: {str(e)}")
+            
+            # Show generated code
+            with st.expander("💻 Generated ML Code", expanded=False):
+                st.code(ml_code, language='python')
+                
+        else:
+            st.error(f"❌ {execution_result['message']}")
+    
+    # Display persistent outputs from other tabs
+    if st.session_state.persistent_outputs['dashboard']:
+        with st.expander("📊 Dashboard Results (from Dashboard tab)", expanded=False):
+            st.info("Dashboard results are available from the Dashboard tab")
+    
+    if st.session_state.persistent_outputs['prescriptive']:
+        with st.expander("💡 Prescriptive Analysis (from Prescriptive tab)", expanded=False):
+            st.info("Prescriptive analysis results are available from the Prescriptive tab")
+    
+    if st.session_state.persistent_outputs['chat']:
+        with st.expander("🗨️ Chat History (from Chat tab)", expanded=False):
+            st.info(f"Chat history with {len(st.session_state.persistent_outputs['chat'])} conversations available from the Chat tab")
+    
+    # ML Results History
+    if st.session_state.persistent_outputs['ml_scientist']:
+        st.subheader("📈 ML Analysis History")
+        
+        for i, result in enumerate(reversed(st.session_state.persistent_outputs['ml_scientist'])):
+            if isinstance(result, dict) and 'model_type' in result:
+                with st.expander(f"🤖 {result['model_type']} - {result['target_column']} ({result['timestamp'].strftime('%Y-%m-%d %H:%M')})", expanded=False):
+                    st.write(f"**Task Type:** {result['task_type']}")
+                    st.write(f"**Target:** {result['target_column']}")
+                    st.write(f"**Model:** {result['model_type']}")
+                    
+                    if result['execution_result']['success']:
+                        st.success("✅ Execution successful")
+                        if result['execution_result']['images']:
+                            st.write(f"Generated {len(result['execution_result']['images'])} visualizations")
+                    else:
+                        st.error(f"❌ Execution failed: {result['execution_result']['message']}")
+    
+    # ML Capabilities Information
+    with st.expander("🤖 ML Scientist Capabilities", expanded=False):
+        st.markdown("""
+        **🧠 Advanced Machine Learning Features:**
+        
+        **📊 Traditional ML Models:**
+        - Linear Regression (scikit-learn)
+        - Random Forest (scikit-learn)
+        - XGBoost (gradient boosting)
+        - Logistic Regression (classification)
+        
+        **🔥 Deep Learning Models (PyTorch):**
+        - Neural Networks (Multi-layer perceptrons)
+        - Transformer Models (attention mechanisms)
+        - Custom architectures for your data
+        
+        **📈 Comprehensive Metrics:**
+        - **Regression:** R², RMSE, MAE, Residual Analysis
+        - **Classification:** Accuracy, Precision, Recall, F1-Score, Confusion Matrix
+        - **Feature Importance:** Permutation importance, SHAP values
+        - **Visualizations:** Training curves, prediction plots, feature importance
+        
+        **⚡ Advanced Features:**
+        - Automatic data preprocessing
+        - Cross-validation and model evaluation
+        - Batch prediction visualization
+        - Real-time model performance tracking
+        - Exportable Python code for reproducibility
+        
+        **🎯 Use Cases:**
+        - Predictive modeling
+        - Classification tasks
+        - Regression analysis
+        - Feature engineering
+        - Model comparison and selection
+        """)
+    
+    # Example Use Cases
+    with st.expander("💡 Example ML Use Cases", expanded=False):
+        st.markdown("""
+        **🎯 Regression Examples:**
+        - "Predict sales revenue based on marketing spend"
+        - "Forecast customer lifetime value"
+        - "Estimate house prices from features"
+        
+        **🏷️ Classification Examples:**
+        - "Classify customers as high/low value"
+        - "Predict customer churn probability"
+        - "Identify fraudulent transactions"
+        
+        **📊 Deep Learning Examples:**
+        - "Use Neural Networks for complex pattern recognition"
+        - "Apply Transformer models for sequence prediction"
+        - "Build custom architectures for your specific data"
+        
+        **🔬 Advanced Analytics:**
+        - "Feature importance analysis"
+        - "Model performance comparison"
+        - "Hyperparameter optimization"
+        - "Ensemble model creation"
+        """)
 
 
 if __name__ == "__main__":
