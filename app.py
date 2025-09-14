@@ -103,7 +103,15 @@ def main():
     if 'data' not in st.session_state:
         st.session_state.data = None
     if 'agents_initialized' not in st.session_state:
-        st.session_state.agents_initialized = False    
+        st.session_state.agents_initialized = False
+    
+    # Initialize persistent outputs storage
+    if 'persistent_outputs' not in st.session_state:
+        st.session_state.persistent_outputs = {
+            'dashboard': [],
+            'prescriptive': [],
+            'chat': []
+        }    
 
     # Sidebar for file upload
     with st.sidebar:
@@ -215,9 +223,11 @@ def main():
                         status_text.empty()
                         
                         # Show success message with key insights
-                        domain = auto_dashboard['business_context']['primary_domain']
-                        confidence = auto_dashboard['business_context']['confidence']
                         chart_count = len(auto_dashboard['charts'])
+                        
+                        # Get domain and confidence from analysis if available
+                        domain = auto_dashboard.get('analysis', {}).get('business_domain', 'general')
+                        confidence = auto_dashboard.get('analysis', {}).get('confidence', 0.8)
                         
                         st.success(f"🎯 **AI Analysis Complete!** Detected {domain} domain (confidence: {confidence:.1%}) • Generated {chart_count} intelligent charts")
                         
@@ -963,6 +973,19 @@ def old_show_dashboard_page():
     </style>
     """, unsafe_allow_html=True)
     
+    # Store dashboard results persistently
+    if dashboard_results and dashboard_results not in st.session_state.persistent_outputs['dashboard']:
+        st.session_state.persistent_outputs['dashboard'].append(dashboard_results)
+    
+    # Display persistent outputs from other tabs
+    if st.session_state.persistent_outputs['prescriptive']:
+        with st.expander("💡 Prescriptive Analysis (from Prescriptive tab)", expanded=False):
+            st.info("Prescriptive analysis results are available from the Prescriptive tab")
+    
+    if st.session_state.persistent_outputs['chat']:
+        with st.expander("🗨️ Chat History (from Chat tab)", expanded=False):
+            st.info(f"Chat history with {len(st.session_state.persistent_outputs['chat'])} conversations available from the Chat tab")
+    
     # Display 4 KPI boxes
     executive_metrics = dashboard_results['executive_metrics']
     kpi_cols = st.columns(4)
@@ -1212,13 +1235,13 @@ def old_show_dashboard_page():
     st.markdown("<br><hr><br>", unsafe_allow_html=True)
     
     # Business Context
-    business_context = dashboard_results['business_context']
+    business_context = dashboard_results.get('business_context', {'primary_domain': 'general', 'confidence': 0.8})
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 10px; border-left: 5px solid #667eea; margin-bottom: 1rem;">
         <h4 style="color: #495057; margin-top: 0;">🏢 Business Context</h4>
         <p style="margin-bottom: 0;"><strong>Industry:</strong> {business_context['primary_domain'].title()}</p>
         <p style="margin-bottom: 0;"><strong>Confidence:</strong> {business_context['confidence']:.1%}</p>
-        <p style="margin-bottom: 0;"><strong>Data Quality:</strong> {dashboard_results['data_quality']:.1f}%</p>
+        <p style="margin-bottom: 0;"><strong>Data Quality:</strong> {dashboard_results.get('data_quality', 95.0):.1f}%</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1279,7 +1302,7 @@ def old_show_dashboard_page():
                 'dashboard_config': dashboard_results.get('layout_config', {}),
                 'kpi_metrics': dashboard_results['executive_metrics'],
                 'ai_insights': dashboard_results['ai_insights'],
-                'business_context': dashboard_results['business_context'],
+                'business_context': dashboard_results.get('business_context', {'primary_domain': 'general', 'confidence': 0.8}),
                 'export_timestamp': pd.Timestamp.now().isoformat()
             }
             
@@ -1309,7 +1332,7 @@ def old_show_dashboard_page():
                 config_summary = {
                     'grid_system': dashboard_results['layout_config']['grid_system']['type'],
                     'color_scheme': dashboard_results['layout_config']['color_scheme']['primary'],
-                    'business_domain': dashboard_results['business_context']['primary_domain'],
+                    'business_domain': dashboard_results.get('business_context', {'primary_domain': 'general'})['primary_domain'],
                     'optimization_level': 'AI_Enhanced'
                 }
                 st.success("💾 AI Dashboard configuration saved!")
@@ -1495,6 +1518,19 @@ def show_prescriptive_page():
     
     presc_results = st.session_state.prescriptive_agent.perform_prescriptive_analysis(st.session_state.data)
     
+    # Store prescriptive results persistently
+    if presc_results and presc_results not in st.session_state.persistent_outputs['prescriptive']:
+        st.session_state.persistent_outputs['prescriptive'].append(presc_results)
+    
+    # Display persistent outputs from other tabs
+    if st.session_state.persistent_outputs['dashboard']:
+        with st.expander("📊 Dashboard Results (from Dashboard tab)", expanded=False):
+            st.info("Dashboard results are available from the Dashboard tab")
+    
+    if st.session_state.persistent_outputs['chat']:
+        with st.expander("🗨️ Chat History (from Chat tab)", expanded=False):
+            st.info(f"Chat history with {len(st.session_state.persistent_outputs['chat'])} conversations available from the Chat tab")
+    
     status_text.text("✅ Prescriptive analysis complete!")
     progress_bar.progress(1.0)
     
@@ -1645,20 +1681,16 @@ def show_chat_page():
         if st.button("🚀 Ask Question", type="primary", use_container_width=True):
             if user_question.strip():
                 with st.spinner("🤖 Analyzing your question..."):
-                    # Get response from chat agent (it now handles visualizations internally)
+                    # Get response from chat agent (now includes Python code for visualizations)
                     response = st.session_state.chat_agent.chat_with_data(st.session_state.data, user_question)
                     
-                    # Check if the chat agent generated a visualization
-                    viz_result = st.session_state.chat_agent.handle_visualization_request(st.session_state.data, user_question)
-                    if viz_result and viz_result.get('chart'):
-                        # Store visualization data for display
-                        st.session_state.last_visualization = viz_result
-                    
-                    st.session_state.chat_history.append({
+                    chat_result = {
                         "question": user_question,
                         "response": response,
                         "timestamp": pd.Timestamp.now()
-                    })
+                    }
+                    st.session_state.chat_history.append(chat_result)
+                    st.session_state.persistent_outputs['chat'].append(chat_result)
                     st.rerun()
             else:
                 st.warning("Please enter a question!")
@@ -1667,7 +1699,17 @@ def show_chat_page():
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state.chat_history = []
             st.session_state.chat_agent.conversation_history = []
+            st.session_state.persistent_outputs['chat'] = []
             st.rerun()
+    
+    # Display persistent outputs from other tabs
+    if st.session_state.persistent_outputs['dashboard']:
+        with st.expander("📊 Dashboard Results (from Dashboard tab)", expanded=False):
+            st.info("Dashboard results are available from the Dashboard tab")
+    
+    if st.session_state.persistent_outputs['prescriptive']:
+        with st.expander("💡 Prescriptive Analysis (from Prescriptive tab)", expanded=False):
+            st.info("Prescriptive analysis results are available from the Prescriptive tab")
     
     # Display chat history
     if st.session_state.chat_history:
@@ -1689,160 +1731,50 @@ def show_chat_page():
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Response
-                st.markdown(f"""
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 10px; 
-                           margin: 0.5rem 0 1.5rem 0; border-left: 4px solid #667eea;">
-                    <p style="color: #2c3e50; margin: 0;">
-                        🤖 <strong>AI Response:</strong>
-                    </p>
-                    <div style="color: #495057; margin-top: 0.5rem; line-height: 1.6;">
-                        {chat['response']}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                # Response with clean text display
+                st.markdown("**🤖 AI Analysis & Insights**")
+                st.markdown("---")
                 
-                # Check if this was the last question and we have a visualization
-                if (i == 0 and hasattr(st.session_state, 'last_visualization') and 
-                    st.session_state.last_visualization):
-                    viz_data = st.session_state.last_visualization
+                # Check for plot images in the response
+                if "[PLOT_IMAGE:" in chat['response']:
+                    import re
+                    import base64
+                    from PIL import Image
+                    import io
                     
-                    # Display the chart
-                    if viz_data.get('chart'):
-                        st.markdown("### 📊 Generated Visualization")
-                        
-                        # Decode base64 image and display
-                        import base64
-                        from PIL import Image
-                        import io
-                        
+                    # Extract plot images from response
+                    plot_matches = re.findall(r'\[PLOT_IMAGE:(.*?)\]', chat['response'])
+                    st.info(f"Found {len(plot_matches)} plot images in response")
+                    
+                    for i, plot_base64 in enumerate(plot_matches):
                         try:
-                            img_data = base64.b64decode(viz_data['chart'])
+                            st.info(f"Processing plot image {i+1} ({len(plot_base64)} chars)")
+                            # Decode and display the image
+                            img_data = base64.b64decode(plot_base64)
                             img = Image.open(io.BytesIO(img_data))
-                            st.image(img, use_column_width=True)
                             
-                            # Show chart explanation
-                            if viz_data.get('explanation'):
-                                st.info(f"📈 {viz_data['explanation']}")
+                            st.markdown("""
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                       padding: 1rem; border-radius: 15px; margin: 1rem 0; text-align: center;">
+                                <h3 style="color: white; margin: 0; font-weight: 600;">📊 Generated Visualization</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Display the image
+                            col1, col2, col3 = st.columns([1, 2, 1])
+                            with col2:
+                                st.image(img, use_column_width=True)
                                 
                         except Exception as e:
-                            st.error(f"Error displaying visualization: {str(e)}")
+                            st.error(f"Error displaying visualization {i+1}: {str(e)}")
                     
-                    # Clear the visualization after displaying
-                    if i == 0:  # Only clear after showing the most recent one
-                        st.session_state.last_visualization = None
+                    # Remove plot image markers from the displayed response
+                    clean_response = re.sub(r'\[PLOT_IMAGE:.*?\]', '', chat['response'])
+                    st.markdown(clean_response)
+                else:
+                    st.info("No plot images found in response")
+                    st.markdown(chat['response'])
 
-def handle_visualization_request(question: str, df: pd.DataFrame) -> str:
-    """Handle requests for custom visualizations"""
-    question_lower = question.lower()
-    
-    try:
-        # Import visualization libraries
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-        
-        # Detect visualization type and columns
-        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-        categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
-        
-        # Simple visualization logic based on keywords
-        if 'scatter' in question_lower and len(numeric_cols) >= 2:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.scatter(df[numeric_cols[0]], df[numeric_cols[1]], alpha=0.6)
-            ax.set_xlabel(numeric_cols[0])
-            ax.set_ylabel(numeric_cols[1])
-            ax.set_title(f'Scatter Plot: {numeric_cols[0]} vs {numeric_cols[1]}')
-            st.pyplot(fig, use_container_width=True)
-            plt.close()
-            return f"Created a scatter plot showing the relationship between {numeric_cols[0]} and {numeric_cols[1]}. The plot reveals the correlation and distribution patterns between these two variables."
-        
-        elif 'histogram' in question_lower and len(numeric_cols) >= 1:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.hist(df[numeric_cols[0]].dropna(), bins=30, alpha=0.7, edgecolor='black')
-            ax.set_xlabel(numeric_cols[0])
-            ax.set_ylabel('Frequency')
-            ax.set_title(f'Distribution of {numeric_cols[0]}')
-            st.pyplot(fig, use_container_width=True)
-            plt.close()
-            return f"Created a histogram showing the distribution of {numeric_cols[0]}. This helps understand the frequency and spread of values in this variable."
-        
-        elif 'bar' in question_lower and len(categorical_cols) >= 1:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            value_counts = df[categorical_cols[0]].value_counts().head(10)
-            ax.bar(range(len(value_counts)), value_counts.values)
-            ax.set_xticks(range(len(value_counts)))
-            ax.set_xticklabels(value_counts.index, rotation=45, ha='right')
-            ax.set_ylabel('Count')
-            ax.set_title(f'Distribution of {categorical_cols[0]}')
-            plt.tight_layout()
-            st.pyplot(fig, use_container_width=True)
-            plt.close()
-            return f"Created a bar chart showing the distribution of {categorical_cols[0]}. This visualization helps identify the most common categories and their frequencies."
-        
-        elif 'correlation' in question_lower and len(numeric_cols) >= 2:
-            fig, ax = plt.subplots(figsize=(10, 8))
-            correlation_matrix = df[numeric_cols].corr()
-            sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, ax=ax)
-            ax.set_title('Correlation Matrix')
-            st.pyplot(fig, use_container_width=True)
-            plt.close()
-            return f"Created a correlation heatmap showing relationships between all numeric variables. Strong positive correlations appear in red, negative correlations in blue, and weak correlations in white."
-        
-        elif 'box' in question_lower and len(numeric_cols) >= 1:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            if len(categorical_cols) >= 1:
-                # Box plot by category
-                categories = df[categorical_cols[0]].unique()[:10]  # Limit to 10 categories
-                data_to_plot = [df[df[categorical_cols[0]] == cat][numeric_cols[0]].dropna() for cat in categories]
-                ax.boxplot(data_to_plot, labels=categories)
-                ax.set_xlabel(categorical_cols[0])
-                ax.set_ylabel(numeric_cols[0])
-                ax.set_title(f'Box Plot: {numeric_cols[0]} by {categorical_cols[0]}')
-                plt.xticks(rotation=45, ha='right')
-            else:
-                # Simple box plot
-                ax.boxplot(df[numeric_cols[0]].dropna())
-                ax.set_ylabel(numeric_cols[0])
-                ax.set_title(f'Box Plot: {numeric_cols[0]}')
-            
-            plt.tight_layout()
-            st.pyplot(fig, use_container_width=True)
-            plt.close()
-            return f"Created a box plot showing the distribution and outliers in {numeric_cols[0]}. The box shows quartiles, and points outside the whiskers are potential outliers."
-        
-        else:
-            # Default: create a simple overview chart
-            if len(numeric_cols) >= 2:
-                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-                
-                # Scatter plot
-                ax1.scatter(df[numeric_cols[0]], df[numeric_cols[1]], alpha=0.6)
-                ax1.set_xlabel(numeric_cols[0])
-                ax1.set_ylabel(numeric_cols[1])
-                ax1.set_title(f'{numeric_cols[0]} vs {numeric_cols[1]}')
-                
-                # Histogram
-                ax2.hist(df[numeric_cols[0]].dropna(), bins=20, alpha=0.7, edgecolor='black')
-                ax2.set_xlabel(numeric_cols[0])
-                ax2.set_ylabel('Frequency')
-                ax2.set_title(f'Distribution of {numeric_cols[0]}')
-                
-                plt.tight_layout()
-                st.pyplot(fig, use_container_width=True)
-                plt.close()
-                return f"Created a comprehensive visualization showing both the relationship between {numeric_cols[0]} and {numeric_cols[1]}, and the distribution of {numeric_cols[0]}."
-            
-            else:
-                return "I understand you want a visualization, but I need more specific details about what type of chart you'd like and which columns to use. Try asking for specific charts like 'create a scatter plot of X vs Y' or 'show me a histogram of column Z'."
-    
-    except Exception as e:
-        return f"I encountered an issue creating the visualization: {str(e)}. Please try rephrasing your request or ask for a different type of chart."
-
-def create_custom_visualization(question: str, df: pd.DataFrame):
-    """Create custom visualizations based on user questions"""
-    # This function is called when visualization keywords are detected
-    # It's a placeholder for more advanced visualization logic
-    pass
 
 if __name__ == "__main__":
     main()

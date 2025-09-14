@@ -20,15 +20,12 @@ class PrescriptiveAgent(BaseAgent):
         import time
         start_time = time.time()
         
-        # Use full dataset for comprehensive analysis, but sample very large datasets
-        if len(df) > 10000:
-            df_sample = df.sample(n=10000, random_state=42)
-            try:
-                st.info(f"📊 Analyzing sample of {len(df_sample):,} records from {len(df):,} total records for comprehensive analysis")
-            except:
-                print(f"📊 Analyzing sample of {len(df_sample):,} records from {len(df):,} total records for comprehensive analysis")
-        else:
-            df_sample = df
+        # Use full dataset for comprehensive analysis
+        df_sample = df
+        try:
+            st.info(f"📊 Analyzing complete dataset of {len(df):,} records for comprehensive analysis")
+        except:
+            print(f"📊 Analyzing complete dataset of {len(df):,} records for comprehensive analysis")
         
         analysis = self.analyze_dataframe(df_sample)
         
