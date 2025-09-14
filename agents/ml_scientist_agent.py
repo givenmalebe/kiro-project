@@ -220,7 +220,7 @@ for epoch in range(epochs):
         val_losses.append(val_loss.item())
     
     if (epoch + 1) % 20 == 0:
-        print(f'Epoch [{epoch+1}/{epochs}], Loss: {{epoch_loss/len(train_loader):.4f}}, Val Loss: {{val_loss.item():.4f}}')
+        print(f'Epoch [{{epoch+1}}/{{epochs}}], Loss: {{epoch_loss/len(train_loader):.4f}}, Val Loss: {{val_loss.item():.4f}}')
 
 # Make predictions
 model.eval()
@@ -467,7 +467,7 @@ for epoch in range(epochs):
         val_accuracies.append(val_accuracy)
     
     if (epoch + 1) % 20 == 0:
-        print(f'Epoch [{epoch+1}/{epochs}], Loss: {{epoch_loss/len(train_loader):.4f}}, Acc: {{100*correct/total:.2f}}%, Val Loss: {{val_loss.item():.4f}}, Val Acc: {{val_accuracy:.2f}}%')
+        print(f'Epoch [{{epoch+1}}/{{epochs}}], Loss: {{epoch_loss/len(train_loader):.4f}}, Acc: {{100*correct/total:.2f}}%, Val Loss: {{val_loss.item():.4f}}, Val Acc: {{val_accuracy:.2f}}%')
 
 # Make predictions
 model.eval()
