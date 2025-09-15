@@ -104,7 +104,7 @@ def main():
     if 'data' not in st.session_state:
         st.session_state.data = None
     if 'agents_initialized' not in st.session_state:
-        st.session_state.agents_initialized = False
+        st.session_state.agents_initialized = False    
     
     # Initialize persistent outputs storage
     if 'persistent_outputs' not in st.session_state:
@@ -1749,7 +1749,7 @@ def show_chat_page():
                     import base64
                     from PIL import Image
                     import io
-                    
+                        
                     # Extract plot images from response
                     plot_matches = re.findall(r'\[PLOT_IMAGE:(.*?)\]', chat['response'])
                     st.info(f"Found {len(plot_matches)} plot images in response")
@@ -1771,7 +1771,7 @@ def show_chat_page():
                             # Display the image
                             col1, col2, col3 = st.columns([1, 2, 1])
                             with col2:
-                                st.image(img, use_container_width=True)
+                                st.image(img, width="stretch")
                                 
                         except Exception as e:
                             st.error(f"Error displaying visualization {i+1}: {str(e)}")
@@ -1809,129 +1809,26 @@ def show_ml_scientist_page():
         st.subheader("Sample Data")
         st.dataframe(st.session_state.data.head(), width="stretch")
     
-    # ML Requirements Chat Section
-    st.subheader("💬 Describe Your ML/DL Requirements")
+    # ML Analysis Section
+    st.subheader("🧠 AI Data Analysis & Model Recommendations")
     
-    # Quick Start Buttons
-    st.markdown("**🚀 Quick Start Examples:**")
-    quick_cols = st.columns(4)
-    
-    with quick_cols[0]:
-        if st.button("📈 Regression", use_container_width=True):
-            st.session_state.ml_requirements = "I want to predict continuous values using machine learning models"
-            st.rerun()
-    
-    with quick_cols[1]:
-        if st.button("🏷️ Binary Classification", use_container_width=True):
-            st.session_state.ml_requirements = "I want to build a binary classifier to predict yes/no outcomes"
-            st.rerun()
-    
-    with quick_cols[2]:
-        if st.button("🏷️ Multi-class", use_container_width=True):
-            st.session_state.ml_requirements = "I want to create a multi-class classifier to categorize data into multiple groups"
-            st.rerun()
-    
-    with quick_cols[3]:
-        if st.button("🧠 Deep Learning", use_container_width=True):
-            st.session_state.ml_requirements = "I want to use deep learning with neural networks or transformers"
-            st.rerun()
-    
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 1.5rem; border-radius: 15px; margin: 1rem 0; text-align: center;">
-        <h3 style="color: white; margin: 0; font-weight: 600;">🤖 Tell the AI What You Want to Build</h3>
-        <p style="color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1rem;">
-            Describe your machine learning or deep learning goals, and the AI will recommend the best approach
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Chat input for ML requirements
-    ml_requirements = st.text_area(
-        "🎯 Describe your ML/DL project:",
-        value=st.session_state.get('ml_requirements', ''),
-        placeholder="""Examples:
-• "I want to predict customer churn using neural networks"
-• "Build a binary classifier to detect fraudulent transactions"
-• "Create a multi-class model to categorize products into different types"
-• "Use deep learning to predict house prices based on features"
-• "Build a transformer model for text classification"
-• "Create a recommendation system using collaborative filtering" """,
-        height=120,
-        help="Be specific about your goals, data type, and preferred algorithms"
-    )
-    
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        if st.button("🤖 Get AI Recommendations", type="primary", use_container_width=True):
-            if ml_requirements.strip():
-                with st.spinner("🤖 AI analyzing your requirements..."):
-                    # Store the requirements
-                    st.session_state.ml_requirements = ml_requirements
-                    
-                    # Analyze data and get recommendations
-                    analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
-                    
-                    # Store analysis results persistently
-                    if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
-                        st.session_state.persistent_outputs['ml_scientist'].append(analysis)
-                    
-                    st.session_state.ml_analysis = analysis
-                
-                st.success("✅ AI analysis complete!")
-                
-                # Display AI recommendations based on requirements
-                st.markdown("**🧠 AI Recommendations Based on Your Requirements:**")
-                
-                # Data characteristics
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("**📊 Dataset Characteristics:**")
-                    st.write(f"• **Shape:** {analysis['data_shape']}")
-                    st.write(f"• **Task Type:** {analysis['task_type'].title()}")
-                    st.write(f"• **Numeric Columns:** {len(analysis['numeric_columns'])}")
-                    st.write(f"• **Categorical Columns:** {len(analysis['categorical_columns'])}")
-                
-                with col2:
-                    st.markdown("**🎯 Target Candidates:**")
-                    for target in analysis['target_candidates'][:5]:  # Show first 5
-                        st.write(f"• {target}")
-                
-                # Recommended models
-                st.markdown("**🤖 Recommended Models:**")
-                model_cols = st.columns(3)
-                for i, model in enumerate(analysis['recommended_models']):
-                    with model_cols[i % 3]:
-                        st.write(f"• {model}")
-            else:
-                st.warning("⚠️ Please describe your ML/DL requirements!")
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 Clear Requirements", use_container_width=True):
-            st.session_state.ml_requirements = ""
-            st.session_state.ml_analysis = None
-            st.rerun()
-    
-    # ML Analysis Section (if no chat requirements provided)
-    if 'ml_analysis' not in st.session_state:
-        st.subheader("🧠 AI Data Analysis & Model Recommendations")
-        
-        # Analyze data and get recommendations
-        if st.button("🔍 Analyze Data & Recommend Models", type="primary"):
-            with st.spinner("🤖 Analyzing data characteristics..."):
-                analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
-                
-                # Store analysis results persistently
-                if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
-                    st.session_state.persistent_outputs['ml_scientist'].append(analysis)
-                
-                st.session_state.ml_analysis = analysis
+    # Analyze data and get recommendations
+    if st.button("🔍 Analyze Data & Recommend Models", type="primary"):
+        with st.spinner("🤖 Analyzing data characteristics..."):
+            analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
             
+            # Store analysis results persistently
+            if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
+                st.session_state.persistent_outputs['ml_scientist'].append(analysis)
+        
             # Display analysis results
-            st.success("✅ Data analysis complete!")
+            st.success("✅ AI analysis complete!")
+            
+            # AI Insights Section
+            if 'ai_insights' in analysis and analysis['ai_insights']:
+                st.subheader("🧠 AI Insights")
+                for insight in analysis['ai_insights']:
+                    st.info(insight)
             
             # Data characteristics
             col1, col2 = st.columns(2)
@@ -1942,18 +1839,42 @@ def show_ml_scientist_page():
                 st.write(f"• **Task Type:** {analysis['task_type'].title()}")
                 st.write(f"• **Numeric Columns:** {len(analysis['numeric_columns'])}")
                 st.write(f"• **Categorical Columns:** {len(analysis['categorical_columns'])}")
+                
+                # Enhanced data characteristics
+                if 'data_characteristics' in analysis:
+                    char = analysis['data_characteristics']
+                    st.write(f"• **Sample Size:** {char.get('sample_size', 'N/A')}")
+                    st.write(f"• **Feature Count:** {char.get('feature_count', 'N/A')}")
+                    st.write(f"• **Missing Data:** {char.get('missing_data_percentage', 0):.1f}%")
             
             with col2:
                 st.markdown("**🎯 Target Candidates:**")
                 for target in analysis['target_candidates'][:5]:  # Show first 5
                     st.write(f"• {target}")
+                
+                # Preprocessing recommendations
+                if 'preprocessing_recommendations' in analysis and analysis['preprocessing_recommendations']:
+                    st.markdown("**🔧 Preprocessing Needed:**")
+                    for rec in analysis['preprocessing_recommendations']:
+                        st.write(f"• {rec}")
             
-            # Recommended models
-            st.markdown("**🤖 Recommended Models:**")
+            # Recommended models with enhanced display
+            st.markdown("**🤖 AI-Recommended Models:**")
             model_cols = st.columns(3)
             for i, model in enumerate(analysis['recommended_models']):
                 with model_cols[i % 3]:
-                    st.write(f"• {model}")
+                    # Add model type indicators
+                    if model in ['Linear Regression', 'Ridge Regression', 'Lasso Regression']:
+                        icon = "📈"
+                    elif model in ['Random Forest', 'XGBoost', 'Gradient Boosting']:
+                        icon = "🌲"
+                    elif model in ['Neural Network', 'Transformer']:
+                        icon = "🧠"
+                    elif model in ['SVM', 'SVR']:
+                        icon = "⚡"
+                    else:
+                        icon = "🔧"
+                    st.write(f"{icon} {model}")
     
     # Model Selection and Code Generation
     st.subheader("⚙️ Model Selection & Code Generation")
@@ -1961,132 +1882,44 @@ def show_ml_scientist_page():
     col1, col2, col3 = st.columns([2, 2, 1])
     
     with col1:
-        # Enhanced target column selection with classification types
-        st.markdown("**🎯 Select Target Column & Task Type:**")
-        
-        # Get column info for better selection
-        numeric_cols = st.session_state.data.select_dtypes(include=['number']).columns.tolist()
-        categorical_cols = st.session_state.data.select_dtypes(include=['object', 'category']).columns.tolist()
-        
-        # Create options with task type indicators
-        target_options = []
-        for col in st.session_state.data.columns:
-            if col in numeric_cols:
-                target_options.append(f"📊 {col} (Regression)")
-            elif col in categorical_cols:
-                # Check if binary or multi-class
-                unique_count = st.session_state.data[col].nunique()
-                if unique_count == 2:
-                    target_options.append(f"🏷️ {col} (Binary Classification)")
-                else:
-                    target_options.append(f"🏷️ {col} (Multi-class Classification)")
-            else:
-                target_options.append(f"❓ {col} (Unknown)")
-        
-        target_selection = st.selectbox(
-            "Choose target column:",
-            options=target_options,
-            help="Select the column you want to predict or analyze. The task type is automatically detected."
+        target_column = st.selectbox(
+            "🎯 Select Target Column:",
+            options=st.session_state.data.columns.tolist(),
+            help="Choose the column you want to predict or analyze"
         )
-        
-        # Extract the actual column name
-        target_column = target_selection.split(" (")[0].split(" ", 1)[1] if " " in target_selection.split(" (")[0] else target_selection.split(" (")[0]
-        
-        # Determine task type
-        if target_column in numeric_cols:
-            task_type = 'regression'
-            task_type_display = "📊 Regression"
-        elif target_column in categorical_cols:
-            unique_count = st.session_state.data[target_column].nunique()
-            if unique_count == 2:
-                task_type = 'binary_classification'
-                task_type_display = "🏷️ Binary Classification"
-            else:
-                task_type = 'multi_classification'
-                task_type_display = "🏷️ Multi-class Classification"
-        else:
-            task_type = 'unknown'
-            task_type_display = "❓ Unknown"
-        
-        # Display selected task type
-        st.info(f"**Selected Task:** {task_type_display}")
-        
-        # Show target column statistics
-        with st.expander("📊 Target Column Statistics", expanded=False):
-            if task_type == 'regression':
-                st.write(f"**Mean:** {st.session_state.data[target_column].mean():.4f}")
-                st.write(f"**Std:** {st.session_state.data[target_column].std():.4f}")
-                st.write(f"**Min:** {st.session_state.data[target_column].min():.4f}")
-                st.write(f"**Max:** {st.session_state.data[target_column].max():.4f}")
-            else:
-                value_counts = st.session_state.data[target_column].value_counts()
-                st.write("**Value Distribution:**")
-                for value, count in value_counts.head(10).items():
-                    percentage = (count / len(st.session_state.data)) * 100
-                    st.write(f"• {value}: {count} ({percentage:.1f}%)")
-                if len(value_counts) > 10:
-                    st.write(f"... and {len(value_counts) - 10} more classes")
     
     with col2:
-        st.markdown("**🤖 Select Model Type:**")
-        
-        # Enhanced model selection based on task type
-        if task_type == 'regression':
-            model_options = [
-                "Linear Regression", "Random Forest", "XGBoost", 
-                "Neural Network", "Transformer"
-            ]
-            model_help = "Choose a regression model. Neural Network and Transformer use PyTorch."
-        elif task_type in ['binary_classification', 'multi_classification']:
-            model_options = [
-                "Logistic Regression", "Random Forest", "XGBoost", 
-                "Neural Network", "Transformer"
-            ]
-            model_help = "Choose a classification model. Neural Network and Transformer use PyTorch."
-        else:
-            model_options = [
-                "Linear Regression", "Random Forest", "XGBoost", 
-                "Neural Network", "Transformer", "Logistic Regression"
-            ]
-            model_help = "Choose any model type. The AI will determine the best approach."
-        
         model_type = st.selectbox(
-            "Choose model:",
-            options=model_options,
-            help=model_help
+            "🤖 Select Model Type:",
+            options=[
+                "🤖 Auto (AI Chooses Best)", "Linear Regression", "Ridge Regression", "Lasso Regression", "Elastic Net",
+                "Random Forest", "Gradient Boosting", "XGBoost", "SVR", "SVM", "KNN",
+                "Decision Tree", "Neural Network", "Transformer", "Logistic Regression"
+            ],
+            help="Choose the machine learning model to use"
         )
-        
-        # Show model description
-        model_descriptions = {
-            "Linear Regression": "📈 Simple linear relationship modeling",
-            "Random Forest": "🌲 Ensemble of decision trees",
-            "XGBoost": "🚀 Gradient boosting with high performance",
-            "Neural Network": "🧠 Deep learning with PyTorch",
-            "Transformer": "🔥 Advanced attention-based deep learning",
-            "Logistic Regression": "📊 Linear classification model"
-        }
-        
-        st.info(f"**Model:** {model_descriptions.get(model_type, 'Custom model')}")
     
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        generate_code = st.button("🚀 Generate ML Code", type="primary", use_container_width=True)
+        generate_code = st.button("🚀 Generate ML Code", type="primary")
     
     # Generate and execute ML code
     if generate_code and target_column and model_type:
-        with st.spinner("🤖 Generating ML code and executing..."):
-            # Use the determined task type from above
-            # Convert task_type to ML agent format
-            if task_type == 'binary_classification':
-                ml_task_type = 'classification'
-            elif task_type == 'multi_classification':
-                ml_task_type = 'classification'
-            else:
-                ml_task_type = task_type
+        with st.spinner("🤖 AI analyzing data and generating ML code..."):
+            # Handle Auto model selection
+            if model_type == "🤖 Auto (AI Chooses Best)":
+                model_type = "Auto"
+                st.info("🤖 AI will automatically select the best model for your data!")
             
-            # Generate ML code
+            # Determine task type
+            if target_column in st.session_state.data.select_dtypes(include=['number']).columns:
+                task_type = 'regression'
+            else:
+                task_type = 'classification'
+            
+            # Generate ML code with AI-powered model selection
             ml_code = st.session_state.ml_scientist_agent.generate_ml_code(
-                st.session_state.data, target_column, model_type, ml_task_type
+                st.session_state.data, target_column, model_type, task_type
             )
             
             # Execute the code
@@ -2111,22 +1944,41 @@ def show_ml_scientist_page():
         if execution_result['success']:
             st.success(f"✅ {execution_result['message']}")
             
-            # Display generated visualizations
+            # Display overall explanation
+            if 'overall_explanation' in execution_result and execution_result['overall_explanation']:
+                st.subheader("🤖 AI Explanation of Results")
+                st.markdown(execution_result['overall_explanation'])
+            
+            # Display generated visualizations with explanations
             if execution_result['images']:
                 st.subheader("📊 Generated Visualizations")
+                
                 for i, img_base64 in enumerate(execution_result['images']):
                     try:
                         img_data = base64.b64decode(img_base64)
                         img = Image.open(io.BytesIO(img_data))
                         
-                        st.markdown(f"""
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                   padding: 1rem; border-radius: 15px; margin: 1rem 0; text-align: center;">
-                            <h3 style="color: white; margin: 0; font-weight: 600;">📊 {model_type} Model Results</h3>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        st.image(img, use_container_width=True)
+                        # Create visualization container with explanation
+                        with st.container():
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                       padding: 1rem; border-radius: 15px; margin: 1rem 0; text-align: center;">
+                                <h3 style="color: white; margin: 0; font-weight: 600;">📊 Visualization {i+1}</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Display the image
+                            st.image(img, width="stretch")
+                            
+                            # Display explanation for this specific visualization
+                            if 'explanations' in execution_result and i < len(execution_result['explanations']):
+                                explanation = execution_result['explanations'][i]
+                                st.markdown(f"""
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 10px; margin: 0.5rem 0; border-left: 4px solid #667eea;">
+                                    <h4 style="margin: 0 0 0.5rem 0; color: #333;">💡 What This Chart Shows:</h4>
+                                    <p style="margin: 0; color: #555;">{explanation}</p>
+                                </div>
+                                """, unsafe_allow_html=True)
                         
                     except Exception as e:
                         st.error(f"Error displaying visualization {i+1}: {str(e)}")
@@ -2134,7 +1986,7 @@ def show_ml_scientist_page():
             # Show generated code
             with st.expander("💻 Generated ML Code", expanded=False):
                 st.code(ml_code, language='python')
-                
+            
         else:
             st.error(f"❌ {execution_result['message']}")
     
@@ -2164,8 +2016,30 @@ def show_ml_scientist_page():
                     
                     if result['execution_result']['success']:
                         st.success("✅ Execution successful")
+                        
+                        # Display overall explanation if available
+                        if 'overall_explanation' in result['execution_result'] and result['execution_result']['overall_explanation']:
+                            st.markdown("**🤖 AI Explanation:**")
+                            st.markdown(result['execution_result']['overall_explanation'])
+                        
                         if result['execution_result']['images']:
                             st.write(f"Generated {len(result['execution_result']['images'])} visualizations")
+                            
+                            # Display visualizations with explanations
+                            for i, img_base64 in enumerate(result['execution_result']['images']):
+                                try:
+                                    img_data = base64.b64decode(img_base64)
+                                    img = Image.open(io.BytesIO(img_data))
+                                    
+                                    st.image(img, width="stretch")
+                                    
+                                    # Display explanation if available
+                                    if 'explanations' in result['execution_result'] and i < len(result['execution_result']['explanations']):
+                                        explanation = result['execution_result']['explanations'][i]
+                                        st.markdown(f"**💡 Chart {i+1}:** {explanation}")
+                                        
+                                except Exception as e:
+                                    st.error(f"Error displaying visualization {i+1}: {str(e)}")
                     else:
                         st.error(f"❌ Execution failed: {result['execution_result']['message']}")
     
@@ -2175,14 +2049,21 @@ def show_ml_scientist_page():
         **🧠 Advanced Machine Learning Features:**
         
         **📊 Traditional ML Models:**
-        - Linear Regression (scikit-learn)
-        - Random Forest (scikit-learn)
-        - XGBoost (gradient boosting)
-        - Logistic Regression (classification)
+        - **Linear Models**: Linear Regression, Ridge, Lasso, Elastic Net
+        - **Tree-based**: Random Forest, Gradient Boosting, XGBoost, Decision Tree
+        - **Support Vector**: SVM, SVR
+        - **Neighbors**: KNN (K-Nearest Neighbors)
+        - **Classification**: Logistic Regression
         
         **🔥 Deep Learning Models (PyTorch):**
         - Neural Networks (Multi-layer perceptrons)
         - Transformer Models (attention mechanisms)
+        
+        **🧠 AI-Powered Features:**
+        - Intelligent model selection based on data characteristics
+        - Automatic preprocessing recommendations
+        - Comprehensive performance analysis with explanations
+        - Cross-validation and feature importance analysis
         - Custom architectures for your data
         
         **📈 Comprehensive Metrics:**
