@@ -126,8 +126,15 @@ def main():
         
         if uploaded_file is not None:
             try:
-                # Load data
-                new_data = pd.read_csv(uploaded_file)
+                # Show loading indicator for large files
+                with st.spinner("📊 Loading and processing your data..."):
+                    # Load data with error handling
+                    new_data = pd.read_csv(uploaded_file)
+                    
+                    # Check file size and warn if too large
+                    file_size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
+                    if file_size_mb > 50:
+                        st.warning(f"⚠️ Large file detected ({file_size_mb:.1f} MB). Processing may take longer.")
                 
                 # Check if data has changed
                 if 'data' not in st.session_state or not new_data.equals(st.session_state.get('data', pd.DataFrame())):
@@ -269,9 +276,17 @@ def main():
                     st.success("✅ AI Dashboard Ready! Check the 'BI Dashboard' tab to view your intelligent visualizations.")
                 else:
                     st.info("👆 Click the button above to generate your AI-powered dashboard!")
+            except pd.errors.EmptyDataError:
+                st.error("❌ The uploaded file is empty. Please upload a valid CSV file.")
+            except pd.errors.ParserError as e:
+                st.error(f"❌ Error parsing CSV file: {str(e)}")
+            except UnicodeDecodeError:
+                st.error("❌ File encoding error. Please ensure your CSV file is UTF-8 encoded.")
+            except MemoryError:
+                st.error("❌ File too large for processing. Please try a smaller file or contact support.")
             except Exception as e:
-                st.error(f"Error loading file: {str(e)}")
-                return
+                st.error(f"❌ Error loading file: {str(e)}")
+                st.info("💡 Try uploading a smaller file or check the file format.")
     
     # Main content area
     if st.session_state.data is not None:
