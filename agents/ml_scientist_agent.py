@@ -99,7 +99,7 @@ torch.manual_seed(42)
 np.random.seed(42)
 
 # Load and prepare data
-df = pd.read_csv('your_data.csv')  # Replace with actual data loading
+# Data is already loaded and available as 'df'
 print(f"Dataset shape: {{df.shape}}")
 
 # Separate features and target
@@ -300,16 +300,31 @@ plt.show()
 
 # Feature importance (for neural networks, we'll use permutation importance)
 from sklearn.inspection import permutation_importance
+from sklearn.base import BaseEstimator
 
-def model_predict(X):
-    X_tensor = torch.FloatTensor(scaler.transform(X))
-    model.eval()
-    with torch.no_grad():
-        return model(X_tensor).numpy()
+class PyTorchModelWrapper(BaseEstimator):
+    def __init__(self, model, scaler):
+        self.model = model
+        self.scaler = scaler
+    
+    def fit(self, X, y):
+        return self
+    
+    def predict(self, X):
+        X_tensor = torch.FloatTensor(self.scaler.transform(X))
+        self.model.eval()
+        with torch.no_grad():
+            return self.model(X_tensor).numpy().flatten()
+    
+    def score(self, X, y):
+        from sklearn.metrics import r2_score
+        predictions = self.predict(X)
+        return r2_score(y, predictions)
 
 # Calculate permutation importance
+model_wrapper = PyTorchModelWrapper(model, scaler)
 perm_importance = permutation_importance(
-    model_predict, X_test, y_test, n_repeats=10, random_state=42
+    model_wrapper, X_test, y_test, n_repeats=10, random_state=42
 )
 
 feature_names = [f'Feature_{{i}}' for i in range(X_test.shape[1])]
@@ -547,18 +562,33 @@ plt.show()
 
 # Feature importance
 from sklearn.inspection import permutation_importance
+from sklearn.base import BaseEstimator
 
-def model_predict(X):
-    X_tensor = torch.FloatTensor(scaler.transform(X))
-    model.eval()
-    with torch.no_grad():
-        outputs = model(X_tensor)
-        _, predicted = torch.max(outputs, 1)
-        return predicted.numpy()
+class PyTorchClassifierWrapper(BaseEstimator):
+    def __init__(self, model, scaler):
+        self.model = model
+        self.scaler = scaler
+    
+    def fit(self, X, y):
+        return self
+    
+    def predict(self, X):
+        X_tensor = torch.FloatTensor(self.scaler.transform(X))
+        self.model.eval()
+        with torch.no_grad():
+            outputs = self.model(X_tensor)
+            _, predicted = torch.max(outputs, 1)
+            return predicted.numpy()
+    
+    def score(self, X, y):
+        from sklearn.metrics import accuracy_score
+        predictions = self.predict(X)
+        return accuracy_score(y, predictions)
 
 # Calculate permutation importance
+model_wrapper = PyTorchClassifierWrapper(model, scaler)
 perm_importance = permutation_importance(
-    model_predict, X_test, y_test, n_repeats=10, random_state=42, scoring='accuracy'
+    model_wrapper, X_test, y_test, n_repeats=10, random_state=42, scoring='accuracy'
 )
 
 feature_names = [f'Feature_{{i}}' for i in range(X_test.shape[1])]
@@ -606,7 +636,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load and prepare data
-df = pd.read_csv('your_data.csv')  # Replace with actual data loading
+# Data is already loaded and available as 'df'
 print(f"Dataset shape: {{df.shape}}")
 
 # Separate features and target

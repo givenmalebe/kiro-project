@@ -527,7 +527,7 @@ def show_dashboard_page():
         # Display the data table with enhanced styling
         st.dataframe(
             st.session_state.data.head(10), 
-            use_container_width=True,
+            width="stretch",
             height=400
         )
         
@@ -543,12 +543,12 @@ def show_dashboard_page():
                     'Non-Null Count': st.session_state.data.count(),
                     'Null Count': st.session_state.data.isnull().sum()
                 })
-                st.dataframe(column_info, use_container_width=True)
+                st.dataframe(column_info, width="stretch")
             
             with info_cols[1]:
                 st.markdown("**📊 Basic Statistics:**")
                 if len(st.session_state.data.select_dtypes(include=[np.number]).columns) > 0:
-                    st.dataframe(st.session_state.data.describe(), use_container_width=True)
+                    st.dataframe(st.session_state.data.describe(), width="stretch")
                 else:
                     st.info("No numeric columns found for statistical summary")
     
@@ -692,7 +692,7 @@ def show_dashboard_page():
                 
                 # Display the chart
                 if chart_info.get('chart'):
-                    st.pyplot(chart_info['chart'], use_container_width=True, clear_figure=True)
+                    st.pyplot(chart_info['chart'], width="stretch", clear_figure=True)
                 
                 # Detailed Chart Explanation Section
                 if chart_info.get('detailed_explanation'):
@@ -1032,7 +1032,7 @@ def old_show_dashboard_page():
         
         # Display the matplotlib figure with optimized settings
         try:
-            st.pyplot(charts[0]['chart'], use_container_width=True, clear_figure=True)
+            st.pyplot(charts[0]['chart'], width="stretch", clear_figure=True)
         except Exception as e:
             st.error(f"Error displaying dashboard: {str(e)}")
             st.info("🔄 Please refresh the page or try uploading your data again.")
@@ -1068,7 +1068,7 @@ def old_show_dashboard_page():
         ax.set_ylim(0, 1)
         ax.axis('off')
         
-        st.pyplot(placeholder_fig, use_container_width=True, clear_figure=True)
+        st.pyplot(placeholder_fig, width="stretch", clear_figure=True)
         
         # Auto-refresh button
         if st.button("🔄 Refresh Dashboard", type="primary"):
@@ -1167,7 +1167,7 @@ def old_show_dashboard_page():
             
             # Display the custom dashboard
             if 'charts' in custom_dashboard and custom_dashboard['charts']:
-                st.pyplot(custom_dashboard['charts'][0]['chart'], use_container_width=True)
+                st.pyplot(custom_dashboard['charts'][0]['chart'], width="stretch")
                 
                 # Show AI explanation
                 with st.expander("🧠 AI Agent Explanation", expanded=True):
@@ -1417,7 +1417,7 @@ def show_eda_page():
     # Column Information
     st.subheader("📊 Column Information")
     col_info_df = pd.DataFrame(overview['column_info']).T
-    st.dataframe(col_info_df, use_container_width=True)
+    st.dataframe(col_info_df, width="stretch")
     
     # Missing Data Analysis
     if eda_results['missing_data_analysis']['total_missing'] > 0:
@@ -1430,7 +1430,7 @@ def show_eda_page():
             'Missing %': [f"{pct:.2f}%" for pct in missing_data['missing_percentages'].values()]
         })
         missing_df = missing_df[missing_df['Missing Count'] > 0]
-        st.dataframe(missing_df, use_container_width=True)
+        st.dataframe(missing_df, width="stretch")
 
 def show_descriptive_page():
     st.header("📈 Descriptive Analysis")
@@ -1467,13 +1467,13 @@ def show_descriptive_page():
     if 'message' not in desc_results['central_tendency']:
         st.subheader("📊 Central Tendency Measures")
         central_df = pd.DataFrame(desc_results['central_tendency']).T
-        st.dataframe(central_df, use_container_width=True)
+        st.dataframe(central_df, width="stretch")
     
     # Variability Measures
     if 'message' not in desc_results['variability_measures']:
         st.subheader("📏 Variability Measures")
         var_df = pd.DataFrame(desc_results['variability_measures']).T
-        st.dataframe(var_df, use_container_width=True)
+        st.dataframe(var_df, width="stretch")
     
     # Distribution Analysis
     if 'message' not in desc_results['distribution_analysis']:
@@ -1487,7 +1487,7 @@ def show_descriptive_page():
                 'Distribution Type': data['distribution_type']
             })
         dist_df = pd.DataFrame(dist_data)
-        st.dataframe(dist_df, use_container_width=True)
+        st.dataframe(dist_df, width="stretch")
     
     # Categorical Analysis
     if 'message' not in desc_results['categorical_analysis']:
@@ -1503,7 +1503,7 @@ def show_descriptive_page():
                     st.write("**Top 10 Frequencies:**")
                     freq_df = pd.DataFrame(list(data['frequency_distribution'].items()), 
                                          columns=['Value', 'Count'])
-                    st.dataframe(freq_df, use_container_width=True)
+                    st.dataframe(freq_df, width="stretch")
 
 def show_prescriptive_page():
     st.header("🎯 Prescriptive Analysis")
@@ -1605,7 +1605,7 @@ def show_prescriptive_page():
                 'Volatility': f"{risk_info['volatility']:.3f}"
             })
         risk_df = pd.DataFrame(risk_data)
-        st.dataframe(risk_df, use_container_width=True)
+        st.dataframe(risk_df, width="stretch")
     
     # Scenario Analysis (if available)
     if 'scenario_analysis' in presc_results and presc_results['scenario_analysis']:
@@ -1621,7 +1621,7 @@ def show_prescriptive_page():
                 'Worst Case': f"{scenarios['worst_case']:.2f}"
             })
         scenario_df = pd.DataFrame(scenario_data)
-        st.dataframe(scenario_df, use_container_width=True)
+        st.dataframe(scenario_df, width="stretch")
 
 def show_chat_page():
     """Interactive chat page for data Q&A and custom visualizations"""
@@ -1653,7 +1653,7 @@ def show_chat_page():
             st.metric("📝 Categorical", categorical_cols)
         
         st.subheader("Sample Data")
-        st.dataframe(st.session_state.data.head(), use_container_width=True)
+        st.dataframe(st.session_state.data.head(), width="stretch")
     
     # Suggested questions
     st.subheader("💡 Suggested Questions")
@@ -1663,7 +1663,7 @@ def show_chat_page():
     cols = st.columns(2)
     for i, question in enumerate(suggested_questions[:6]):  # Show first 6 suggestions
         with cols[i % 2]:
-            if st.button(f"💭 {question}", key=f"suggestion_{i}", use_container_width=True):
+            if st.button(f"💭 {question}", key=f"suggestion_{i}", width="stretch"):
                 # Add to chat history and get response
                 response = st.session_state.chat_agent.chat_with_data(st.session_state.data, question)
                 st.session_state.chat_history.append({
@@ -1686,7 +1686,7 @@ def show_chat_page():
     col1, col2, col3 = st.columns([1, 1, 2])
     
     with col1:
-        if st.button("🚀 Ask Question", type="primary", use_container_width=True):
+        if st.button("🚀 Ask Question", type="primary", width="stretch"):
             if user_question.strip():
                 with st.spinner("🤖 Analyzing your question..."):
                     # Get response from chat agent (now includes Python code for visualizations)
@@ -1704,7 +1704,7 @@ def show_chat_page():
                 st.warning("Please enter a question!")
     
     with col2:
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+        if st.button("🗑️ Clear Chat", width="stretch"):
             st.session_state.chat_history = []
             st.session_state.chat_agent.conversation_history = []
             st.session_state.persistent_outputs['chat'] = []
@@ -1771,7 +1771,7 @@ def show_chat_page():
                             # Display the image
                             col1, col2, col3 = st.columns([1, 2, 1])
                             with col2:
-                                st.image(img, use_column_width=True)
+                                st.image(img, use_container_width=True)
                                 
                         except Exception as e:
                             st.error(f"Error displaying visualization {i+1}: {str(e)}")
@@ -1807,44 +1807,153 @@ def show_ml_scientist_page():
             st.metric("📝 Categorical", categorical_cols)
         
         st.subheader("Sample Data")
-        st.dataframe(st.session_state.data.head(), use_container_width=True)
+        st.dataframe(st.session_state.data.head(), width="stretch")
     
-    # ML Analysis Section
-    st.subheader("🧠 AI Data Analysis & Model Recommendations")
+    # ML Requirements Chat Section
+    st.subheader("💬 Describe Your ML/DL Requirements")
     
-    # Analyze data and get recommendations
-    if st.button("🔍 Analyze Data & Recommend Models", type="primary"):
-        with st.spinner("🤖 Analyzing data characteristics..."):
-            analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
+    # Quick Start Buttons
+    st.markdown("**🚀 Quick Start Examples:**")
+    quick_cols = st.columns(4)
+    
+    with quick_cols[0]:
+        if st.button("📈 Regression", use_container_width=True):
+            st.session_state.ml_requirements = "I want to predict continuous values using machine learning models"
+            st.rerun()
+    
+    with quick_cols[1]:
+        if st.button("🏷️ Binary Classification", use_container_width=True):
+            st.session_state.ml_requirements = "I want to build a binary classifier to predict yes/no outcomes"
+            st.rerun()
+    
+    with quick_cols[2]:
+        if st.button("🏷️ Multi-class", use_container_width=True):
+            st.session_state.ml_requirements = "I want to create a multi-class classifier to categorize data into multiple groups"
+            st.rerun()
+    
+    with quick_cols[3]:
+        if st.button("🧠 Deep Learning", use_container_width=True):
+            st.session_state.ml_requirements = "I want to use deep learning with neural networks or transformers"
+            st.rerun()
+    
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 1.5rem; border-radius: 15px; margin: 1rem 0; text-align: center;">
+        <h3 style="color: white; margin: 0; font-weight: 600;">🤖 Tell the AI What You Want to Build</h3>
+        <p style="color: rgba(255,255,255,0.9); margin: 0.5rem 0 0 0; font-size: 1rem;">
+            Describe your machine learning or deep learning goals, and the AI will recommend the best approach
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Chat input for ML requirements
+    ml_requirements = st.text_area(
+        "🎯 Describe your ML/DL project:",
+        value=st.session_state.get('ml_requirements', ''),
+        placeholder="""Examples:
+• "I want to predict customer churn using neural networks"
+• "Build a binary classifier to detect fraudulent transactions"
+• "Create a multi-class model to categorize products into different types"
+• "Use deep learning to predict house prices based on features"
+• "Build a transformer model for text classification"
+• "Create a recommendation system using collaborative filtering" """,
+        height=120,
+        help="Be specific about your goals, data type, and preferred algorithms"
+    )
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        if st.button("🤖 Get AI Recommendations", type="primary", use_container_width=True):
+            if ml_requirements.strip():
+                with st.spinner("🤖 AI analyzing your requirements..."):
+                    # Store the requirements
+                    st.session_state.ml_requirements = ml_requirements
+                    
+                    # Analyze data and get recommendations
+                    analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
+                    
+                    # Store analysis results persistently
+                    if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
+                        st.session_state.persistent_outputs['ml_scientist'].append(analysis)
+                    
+                    st.session_state.ml_analysis = analysis
+                
+                st.success("✅ AI analysis complete!")
+                
+                # Display AI recommendations based on requirements
+                st.markdown("**🧠 AI Recommendations Based on Your Requirements:**")
+                
+                # Data characteristics
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**📊 Dataset Characteristics:**")
+                    st.write(f"• **Shape:** {analysis['data_shape']}")
+                    st.write(f"• **Task Type:** {analysis['task_type'].title()}")
+                    st.write(f"• **Numeric Columns:** {len(analysis['numeric_columns'])}")
+                    st.write(f"• **Categorical Columns:** {len(analysis['categorical_columns'])}")
+                
+                with col2:
+                    st.markdown("**🎯 Target Candidates:**")
+                    for target in analysis['target_candidates'][:5]:  # Show first 5
+                        st.write(f"• {target}")
+                
+                # Recommended models
+                st.markdown("**🤖 Recommended Models:**")
+                model_cols = st.columns(3)
+                for i, model in enumerate(analysis['recommended_models']):
+                    with model_cols[i % 3]:
+                        st.write(f"• {model}")
+            else:
+                st.warning("⚠️ Please describe your ML/DL requirements!")
+    
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🔄 Clear Requirements", use_container_width=True):
+            st.session_state.ml_requirements = ""
+            st.session_state.ml_analysis = None
+            st.rerun()
+    
+    # ML Analysis Section (if no chat requirements provided)
+    if 'ml_analysis' not in st.session_state:
+        st.subheader("🧠 AI Data Analysis & Model Recommendations")
+        
+        # Analyze data and get recommendations
+        if st.button("🔍 Analyze Data & Recommend Models", type="primary"):
+            with st.spinner("🤖 Analyzing data characteristics..."):
+                analysis = st.session_state.ml_scientist_agent.analyze_data_and_recommend_models(st.session_state.data)
+                
+                # Store analysis results persistently
+                if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
+                    st.session_state.persistent_outputs['ml_scientist'].append(analysis)
+                
+                st.session_state.ml_analysis = analysis
             
-            # Store analysis results persistently
-            if analysis and analysis not in st.session_state.persistent_outputs['ml_scientist']:
-                st.session_state.persistent_outputs['ml_scientist'].append(analysis)
-        
-        # Display analysis results
-        st.success("✅ Data analysis complete!")
-        
-        # Data characteristics
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**📊 Dataset Characteristics:**")
-            st.write(f"• **Shape:** {analysis['data_shape']}")
-            st.write(f"• **Task Type:** {analysis['task_type'].title()}")
-            st.write(f"• **Numeric Columns:** {len(analysis['numeric_columns'])}")
-            st.write(f"• **Categorical Columns:** {len(analysis['categorical_columns'])}")
-        
-        with col2:
-            st.markdown("**🎯 Target Candidates:**")
-            for target in analysis['target_candidates'][:5]:  # Show first 5
-                st.write(f"• {target}")
-        
-        # Recommended models
-        st.markdown("**🤖 Recommended Models:**")
-        model_cols = st.columns(3)
-        for i, model in enumerate(analysis['recommended_models']):
-            with model_cols[i % 3]:
-                st.write(f"• {model}")
+            # Display analysis results
+            st.success("✅ Data analysis complete!")
+            
+            # Data characteristics
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**📊 Dataset Characteristics:**")
+                st.write(f"• **Shape:** {analysis['data_shape']}")
+                st.write(f"• **Task Type:** {analysis['task_type'].title()}")
+                st.write(f"• **Numeric Columns:** {len(analysis['numeric_columns'])}")
+                st.write(f"• **Categorical Columns:** {len(analysis['categorical_columns'])}")
+            
+            with col2:
+                st.markdown("**🎯 Target Candidates:**")
+                for target in analysis['target_candidates'][:5]:  # Show first 5
+                    st.write(f"• {target}")
+            
+            # Recommended models
+            st.markdown("**🤖 Recommended Models:**")
+            model_cols = st.columns(3)
+            for i, model in enumerate(analysis['recommended_models']):
+                with model_cols[i % 3]:
+                    st.write(f"• {model}")
     
     # Model Selection and Code Generation
     st.subheader("⚙️ Model Selection & Code Generation")
@@ -1852,38 +1961,132 @@ def show_ml_scientist_page():
     col1, col2, col3 = st.columns([2, 2, 1])
     
     with col1:
-        target_column = st.selectbox(
-            "🎯 Select Target Column:",
-            options=st.session_state.data.columns.tolist(),
-            help="Choose the column you want to predict or analyze"
+        # Enhanced target column selection with classification types
+        st.markdown("**🎯 Select Target Column & Task Type:**")
+        
+        # Get column info for better selection
+        numeric_cols = st.session_state.data.select_dtypes(include=['number']).columns.tolist()
+        categorical_cols = st.session_state.data.select_dtypes(include=['object', 'category']).columns.tolist()
+        
+        # Create options with task type indicators
+        target_options = []
+        for col in st.session_state.data.columns:
+            if col in numeric_cols:
+                target_options.append(f"📊 {col} (Regression)")
+            elif col in categorical_cols:
+                # Check if binary or multi-class
+                unique_count = st.session_state.data[col].nunique()
+                if unique_count == 2:
+                    target_options.append(f"🏷️ {col} (Binary Classification)")
+                else:
+                    target_options.append(f"🏷️ {col} (Multi-class Classification)")
+            else:
+                target_options.append(f"❓ {col} (Unknown)")
+        
+        target_selection = st.selectbox(
+            "Choose target column:",
+            options=target_options,
+            help="Select the column you want to predict or analyze. The task type is automatically detected."
         )
+        
+        # Extract the actual column name
+        target_column = target_selection.split(" (")[0].split(" ", 1)[1] if " " in target_selection.split(" (")[0] else target_selection.split(" (")[0]
+        
+        # Determine task type
+        if target_column in numeric_cols:
+            task_type = 'regression'
+            task_type_display = "📊 Regression"
+        elif target_column in categorical_cols:
+            unique_count = st.session_state.data[target_column].nunique()
+            if unique_count == 2:
+                task_type = 'binary_classification'
+                task_type_display = "🏷️ Binary Classification"
+            else:
+                task_type = 'multi_classification'
+                task_type_display = "🏷️ Multi-class Classification"
+        else:
+            task_type = 'unknown'
+            task_type_display = "❓ Unknown"
+        
+        # Display selected task type
+        st.info(f"**Selected Task:** {task_type_display}")
+        
+        # Show target column statistics
+        with st.expander("📊 Target Column Statistics", expanded=False):
+            if task_type == 'regression':
+                st.write(f"**Mean:** {st.session_state.data[target_column].mean():.4f}")
+                st.write(f"**Std:** {st.session_state.data[target_column].std():.4f}")
+                st.write(f"**Min:** {st.session_state.data[target_column].min():.4f}")
+                st.write(f"**Max:** {st.session_state.data[target_column].max():.4f}")
+            else:
+                value_counts = st.session_state.data[target_column].value_counts()
+                st.write("**Value Distribution:**")
+                for value, count in value_counts.head(10).items():
+                    percentage = (count / len(st.session_state.data)) * 100
+                    st.write(f"• {value}: {count} ({percentage:.1f}%)")
+                if len(value_counts) > 10:
+                    st.write(f"... and {len(value_counts) - 10} more classes")
     
     with col2:
-        model_type = st.selectbox(
-            "🤖 Select Model Type:",
-            options=[
+        st.markdown("**🤖 Select Model Type:**")
+        
+        # Enhanced model selection based on task type
+        if task_type == 'regression':
+            model_options = [
+                "Linear Regression", "Random Forest", "XGBoost", 
+                "Neural Network", "Transformer"
+            ]
+            model_help = "Choose a regression model. Neural Network and Transformer use PyTorch."
+        elif task_type in ['binary_classification', 'multi_classification']:
+            model_options = [
+                "Logistic Regression", "Random Forest", "XGBoost", 
+                "Neural Network", "Transformer"
+            ]
+            model_help = "Choose a classification model. Neural Network and Transformer use PyTorch."
+        else:
+            model_options = [
                 "Linear Regression", "Random Forest", "XGBoost", 
                 "Neural Network", "Transformer", "Logistic Regression"
-            ],
-            help="Choose the machine learning model to use"
+            ]
+            model_help = "Choose any model type. The AI will determine the best approach."
+        
+        model_type = st.selectbox(
+            "Choose model:",
+            options=model_options,
+            help=model_help
         )
+        
+        # Show model description
+        model_descriptions = {
+            "Linear Regression": "📈 Simple linear relationship modeling",
+            "Random Forest": "🌲 Ensemble of decision trees",
+            "XGBoost": "🚀 Gradient boosting with high performance",
+            "Neural Network": "🧠 Deep learning with PyTorch",
+            "Transformer": "🔥 Advanced attention-based deep learning",
+            "Logistic Regression": "📊 Linear classification model"
+        }
+        
+        st.info(f"**Model:** {model_descriptions.get(model_type, 'Custom model')}")
     
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        generate_code = st.button("🚀 Generate ML Code", type="primary")
+        generate_code = st.button("🚀 Generate ML Code", type="primary", use_container_width=True)
     
     # Generate and execute ML code
     if generate_code and target_column and model_type:
         with st.spinner("🤖 Generating ML code and executing..."):
-            # Determine task type
-            if target_column in st.session_state.data.select_dtypes(include=['number']).columns:
-                task_type = 'regression'
+            # Use the determined task type from above
+            # Convert task_type to ML agent format
+            if task_type == 'binary_classification':
+                ml_task_type = 'classification'
+            elif task_type == 'multi_classification':
+                ml_task_type = 'classification'
             else:
-                task_type = 'classification'
+                ml_task_type = task_type
             
             # Generate ML code
             ml_code = st.session_state.ml_scientist_agent.generate_ml_code(
-                st.session_state.data, target_column, model_type, task_type
+                st.session_state.data, target_column, model_type, ml_task_type
             )
             
             # Execute the code
@@ -1923,7 +2126,7 @@ def show_ml_scientist_page():
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        st.image(img, use_column_width=True)
+                        st.image(img, use_container_width=True)
                         
                     except Exception as e:
                         st.error(f"Error displaying visualization {i+1}: {str(e)}")
